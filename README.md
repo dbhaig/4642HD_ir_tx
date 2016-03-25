@@ -5,6 +5,10 @@ Arduino UNO program that generates infrared signals to change channels on a CISC
 
 Connect an infrared LED, in series with a 50 ohm resistor, between digital pin 6 and ground on the UNO board.
 
+### Compiling Code
+
+This project was developed using the "ino" command line toolkit for the Arduino, further infomation avaialble at http://inotool.org.
+
 ### Commands
 
 Commands are sent to the Arduino over USB, via the serial interface:
@@ -18,7 +22,7 @@ Commands are sent to the Arduino over USB, via the serial interface:
 | Command                   |   Response                                                                                 |
 | ------------------------  | ------------------------------------------------------------------------------------------ |
 |?                          | List of valid commands                                                                     |
-|IDN?                       | IDN identification string                                                                  |
+|IDN?                       | \*IDN Arduino - Cisco 4642HD Remote Control                                                |
 |POWER                      | "POWER" - Powers on 4642HD                                                                 |
 |CHANNEL [0-9][0-9][0-9]    | "CHANNEL XXX" - Where XXX is the channel number specified                                  |
 |CHANNEL?                   | "CHANNEL XXX" - Where XXX is the last channel number sent (or 000, if channel is unknown)  |
