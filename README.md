@@ -3,11 +3,13 @@ Arduino UNO program that generates infrared signals to change channels on a CISC
 
 ### Hardware
 
-Connect an infrared LED, in series with a 50 ohm resistor, between digital pin 6 and ground on the UNO board.
+Connect an infrared LED, in series with a 50 ohm resistor, between digital pin 6 and ground on the UNO board. Be careful connect the LED with the correct polarity, otherwise it will not transmit.
+
+I used a TSAL6200. (http://www.vishay.com/docs/81010/tsal6200.pdf.) 
 
 ### Compiling Code
 
-This project was developed using the "ino" command line toolkit for the Arduino, further infomation avaialble at http://inotool.org.
+This project was developed using the "ino" command line toolkit for the Arduino, further infomation available at http://inotool.org.
 
 ### Commands
 
