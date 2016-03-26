@@ -1,5 +1,5 @@
 /* CISCO.h
-  Copyright 2015-2016 Don Haig (time 4 tux at gmail dot com)
+  Copyright 2015-2016 Don Haig (time4tux at gmail dot com)
   MIT Licence (See LICENSE.txt for details) 
 */
 
