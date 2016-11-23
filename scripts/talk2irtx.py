@@ -1,129 +1,115 @@
 #!/usr/bin/env python
 #
-# File Name: talk2irtx.py
-#
-# Purpose: A program to control 4642HD NextBox using arduino based IR transmitter
-#
 #  Copyright 2015-2016 Don Haig (time4tux at gmail dot com)
-#  MIT Licence (See LICENSE.txt for details) 
+#  MIT Licence (See LICENSE.txt for details)
+#
+# Created: 17-01-2016
+# Last Modified: Tue 22 Nov 2016 10:29:29 PM EST -0500
 
-import sys, getopt, os
+""" Control 4642HD NextBox using arduino based IR transmitter """
+
+import sys
+import os
 import serial
-import fcntl
 import subprocess
 import time
+import os.path
+from optparse import OptionParser
 
-# Equivalent of the _IO('U', 20) constant in the linux kernel.
-USBDEVFS_RESET = ord('U') << (4*2) | 20
+PATH = "/dev/ir_tx"
 
-verbose = False
 
-def version():
-    print os.path.basename( __file__ ), '-', Description,
-    print '( Version:', Version, Author, Date,')'
+def arduino_uno_connected():
+    """ Check for Arduino UNO hardware """
+    if os.path.islink(PATH):
+        return True
+    else:
+        proc = subprocess.Popen(['lsusb'], stdout=subprocess.PIPE)
+        out = proc.communicate()[0]
+        lines = out.split('\n')
+        for line in lines:
+            if 'ID 2341:0001 Arduino SA Uno (CDC ACM)' in line:
+                output_profile_info()
+            if 'ID 1a86:7523 QinHeng Electronics HL-340 USB-Serial' in line:
+                output_profile_info()
+    print "*** ERROR *** Arduino Uno NOT found!"
     sys.exit()
 
 
-def usage():
-    print 'usage: ', os.path.basename( __file__ ), '"command"'
-    print '       -h        usage information (this output)'
-    print '       -R        reset USB port that Arduino is connected to'
-    print '       -v        output version information'
+def output_profile_info():
+    print '# *** Info *** Device path NOT defined.'
+    print '# Use lsusb to get Vid and Pid for the Arduino board you are using'
+    print '# Add a line to /etc/udev/rules.d/50-usb.rules'\
+          + ' and reboot the system'
+    print '# SUBSYSTEM=="tty", ATTRS{idVendor}=="Vendor ID",'\
+          + ' ATTRS{idProduct}=="<Product ID>", SYMLINK+="ir_tx",'\
+          + ' MODE="0666"'
     sys.exit()
 
 
-def getArduinoUsbDevice():
-    proc = subprocess.Popen(['lsusb'], stdout=subprocess.PIPE)
-    out = proc.communicate()[0]
-    lines = out.split('\n')
-    for line in lines:
-        if 'Arduino' in line:
-            parts = line.split()
-            bus = parts[1]
-            dev = parts[3][:3]
-            print '/dev/bus/usb/%s/%s' % (bus, dev)
-            return '/dev/bus/usb/%s/%s' % (bus, dev)
+def configure_serial_port():
+    # Reset serial port
+    s_p = serial.Serial(PATH)
+
+    with s_p:
+        s_p.setDTR(False)
+        time.sleep(1)
+        s_p.flushInput()
+        s_p.setDTR(True)
+
+    # Configure to serial port
+    s_p = serial.Serial(PATH,
+                        baudrate=115200,
+                        bytesize=serial.EIGHTBITS,
+                        # parity=serial.PARITY_NONE,
+                        # stopbits=serial.STOPBITS_ONE,
+                        # xonxoff=0,
+                        timeout=1,
+                        # rtscts=0
+                        )
+    return s_p
 
 
-def send_reset(dev_path):
-    fd = os.open(dev_path, os.O_WRONLY)
-    try:
-        fcntl.ioctl(fd, USBDEVFS_RESET, 0)
-    finally:
-        os.close(fd)
-
-
-def resetUsbPort():
-    print "reset USB port"
-    send_reset(getArduinoUsbDevice())
-    sys.exit()
+def arduino_is_an_ir_tx(port):
+    for trys in range(0, 2):   # try three times if necessary
+        port.write("*IDN?\n")
+        time.sleep(1)
+        response = port.readline()
+        if response == "*IDN Arduino - Cisco 4642HD Remote Control\r\n":
+            return "True"
+        else:
+            print "*** ERROR *** Cisco 4642HD Remote Control NOT found!"
+            sys.exit()
 
 
 def main(argv):
 
-    try:
-        opts, args = getopt.getopt(argv,"hRv",["help", "Reset", "version"])
-    except getopt.GetoptError:
-        usage()
+    s = configure_serial_port()
 
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            usage()
-        elif opt in ("-R", "--reset"):
-            resetUsbPort()
-        elif opt in ("-v", "--version"):
-            version()
-   
-    if len(args) == 0:    
-        print '**ERROR** Command not specified! Use \'-\' for stdin. (Type \'',\
-            os.path.basename( __file__ ), '-h\' for help.)'
+    if arduino_is_an_ir_tx(s):
+
+        for command in args:
+            s.write(command + "\n")
+            time.sleep(4)
+            response = s.readline().rstrip()
+
+        if response != command:
+            print "*** ERROR *** '" + command + "' !=  '" + response + "'"
+        else:
+            print "'" + command + "' sent"
         sys.exit()
 
-    #Reset serial port
-    s = serial.Serial('/dev/ttyACM0')
-
-    with s:
-        s.setDTR(False)
-        time.sleep(1)
-        s.flushInput()
-        s.setDTR(True)
-
-
-    #Configure to serial port
-    s = serial.Serial('/dev/ttyACM0',
-                      baudrate=115200,
-                      bytesize=serial.EIGHTBITS,
-#                      parity=serial.PARITY_NONE,
-#                      stopbits=serial.STOPBITS_ONE,
-#                      xonxoff=0,
-                      timeout=1,
-#                      rtscts=0
-                      )
-    
-    s.write("*IDN?\n")
-    time.sleep(1)
-    response = s.readline()
-    print response
-    count=0
-    while "*IDN Arduino - Cisco 4642HD Remote Control" not in response:
-        print "resend *IDN?"
-        s.write("*IDN?\n")
-        response = s.readline()
-        print response
-        time.sleep(1)
-        count += 1
-        if count > 10:
-            break
- 
-    for command in args:
-        print "Processing :'" + command + "'"    
-        s.write(command + "\n")
-        time.sleep(4)
-        response = s.readline()
-        print response
-
-    print "Done!"        
-    sys.exit()
-
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    __version__ = "0.0.2"
+    usage = "usage: %prog [options] <command>"
+    parser = OptionParser(usage, version="%prog " + __version__)
+
+    (options, args) = parser.parse_args()
+
+    if len(args) == 0:
+        parser.error("incorrect number of arguments")
+        if options.verbose:
+            print("reading %s..." % options.filename)
+
+    if arduino_uno_connected():
+        main(args)
