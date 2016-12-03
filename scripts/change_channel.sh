@@ -17,6 +17,10 @@ LOG_FILE=/home/mythtv/change_channel.log
 
 date=$(date +%Y-%m-%d-%H:%M:%S)
 me=$(whoami)
-result=$(/home/mythtv/talk2irtx.py "CHANNEL $1 >> $LOG_FILE")
-echo $result >> $LOG_FILE
-echo "$date 4642HD changed to channel'$1' $me" >> $LOG_FILE
+if $(/home/mythtv/talk2irtx.py "CHANNEL $1" >> $LOG_FILE 2>&1); then
+   echo $result >> $LOG_FILE
+   echo "$date 4642HD changed to channel'$1' $me" >> $LOG_FILE
+   if $(/home/mythtv/pvr2_record.py $1 >> $LOG_FILE 2>&1 &); then
+       echo "$date PVR2 record started" >> $LOG_FILE
+   fi
+fi

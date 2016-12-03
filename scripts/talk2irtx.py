@@ -44,7 +44,9 @@ def output_profile_info():
     print '# SUBSYSTEM=="tty", ATTRS{idVendor}=="Vendor ID",'\
           + ' ATTRS{idProduct}=="<Product ID>", SYMLINK+="ir_tx",'\
           + ' MODE="0666"'
-    sys.exit()
+    print "# Reboot to load rules and create symlink"
+
+    sys.exit(1)
 
 
 def configure_serial_port():
