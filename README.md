@@ -1,6 +1,9 @@
 # 4642HD_ir_tx
 Arduino UNO program that generates infrared signals to change channels on a CISCO 4642HD cable box
 
+![4642HD with Arduino IR Tx](images/IR_Tx.png)
+
+
 ### Hardware
 
 Connect an infrared LED, in series with a 50 ohm resistor, between digital pin 6 and ground on the UNO board. Be careful connect the LED with the correct polarity, otherwise it will not transmit.
