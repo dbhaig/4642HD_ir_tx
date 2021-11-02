@@ -31,3 +31,7 @@ Commands are sent to the Arduino over USB, via the serial interface:
 |POWER                      | "POWER" - Powers on 4642HD                                                                 |
 |CHANNEL [0-9][0-9][0-9]    | "CHANNEL XXX" - Where XXX is the channel number specified                                  |
 |CHANNEL?                   | "CHANNEL XXX" - Where XXX is the last channel number sent (or 000, if channel is unknown)  |
+
+### TODO
+
+Update to compile with arduino-cli
